@@ -1,0 +1,17 @@
+{
+  "name": "dough-days-bread-bake-journal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dough Days - a warm, cozy bread bake journal that lives in your browser.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:size": "node tools/check-size.mjs",
+    "serve": "node tools/serve.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.0",
+    "vitest": "^1.6.0"
+  }
+}

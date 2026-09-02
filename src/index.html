@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Dough Days — a cozy, in-your-browser journal for logging bread bakes." />
+  <title>Dough Days — Bread Bake Journal</title>
+  <link rel="stylesheet" href="./styles/main.css" />
+</head>
+<body>
+  <main id="app" class="app">
+    <header class="masthead">
+      <h1 class="title">Dough Days</h1>
+      <p class="tagline">A cozy journal for your best (and flop) bakes.</p>
+    </header>
+    <section id="summary-mount" class="summary-wrap" aria-label="Baking summary"></section>
+    <div class="layout">
+      <section id="form-mount" class="form-col" aria-label="Log a bake"></section>
+      <section class="list-col" aria-label="Bake history">
+        <h2 class="list-title">The Crumb Trail</h2>
+        <div id="bake-list-mount"></div>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
