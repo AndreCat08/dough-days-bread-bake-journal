@@ -39,4 +39,41 @@ describe('BakeForm', () => {
     submit(form, { name: 'Pretzel Bread' });
     expect(form.querySelector('#bake-name').value).toBe('');
   });
+
+  it('is a WAI-ARIA radiogroup: arrow keys move and re-check', () => {
+    const form = renderBakeForm({ onAdd: vi.fn() });
+    const r3 = form.querySelector('#rating-3');
+    expect(r3.checked).toBe(true);
+    expect(r3.tabIndex).toBe(0); // single tab stop on the selected control
+
+    r3.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(form.querySelector('#rating-4').checked).toBe(true);
+    expect(form.querySelector('#rating-4').tabIndex).toBe(0);
+    expect(r3.tabIndex).toBe(-1);
+
+    form.querySelector('#rating-4').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    expect(r3.checked).toBe(true);
+  });
+
+  it('clamps arrow-key movement at the range ends', () => {
+    const form = renderBakeForm({ onAdd: vi.fn() });
+    const r5 = form.querySelector('#rating-5');
+    r5.focus();
+    r5.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(r5.checked).toBe(true); // stuck at 5
+
+    const r1 = form.querySelector('#rating-1');
+    r1.focus();
+    r1.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+    expect(r1.checked).toBe(true); // stuck at 1
+  });
+
+  it('keeps a working default rating after reset', () => {
+    const onAdd = vi.fn();
+    const form = renderBakeForm({ onAdd });
+    submit(form, { name: 'Ciabatta', rating: 5 });
+    expect(form.querySelector('#rating-5').checked).toBe(false);
+    expect(form.querySelector('#rating-3').checked).toBe(true);
+    expect(form.querySelector('#rating-3').tabIndex).toBe(0);
+  });
 });
