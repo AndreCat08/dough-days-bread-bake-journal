@@ -3,8 +3,12 @@ import { LIMITS } from '../utils/sanitize.js';
 import { MIN_RATING, MAX_RATING } from '../utils/rating.js';
 
 const today = () => new Date().toISOString().slice(0, 10);
+const DEFAULT_IDX = 2; // default to a 3-star rating
 
-/** Build the "log a bake" form. Calls onAdd({name,date,rating,note,bakeAgain}). */
+/**
+ * Build the "log a bake" form.
+ * @param {{onAdd: (input: {name:string,date:string,rating:number,note:string,bakeAgain:boolean}) => void}} opts
+ */
 export function renderBakeForm({ onAdd }) {
   const nameInput = el('input', {
     type: 'text', id: 'bake-name', name: 'name', required: true,
@@ -23,7 +27,6 @@ export function renderBakeForm({ onAdd }) {
       type: 'radio', name: 'rating', value: String(i), id: 'rating-' + i,
       required: true, 'aria-label': i + ' out of 5',
     });
-    if (i === 3) input.checked = true;
     ratingInputs.push(input);
   }
 
@@ -35,6 +38,28 @@ export function renderBakeForm({ onAdd }) {
     type: 'checkbox', id: 'bake-again', name: 'bakeAgain',
     'aria-label': 'Would bake again?', checked: true,
   });
+
+  // WAI-ARIA radiogroup: one tab stop (the selected control), arrow keys move.
+  function setRating(idx) {
+    ratingInputs.forEach((input, i) => {
+      input.checked = i === idx;
+      input.tabIndex = i === idx ? 0 : -1;
+    });
+  }
+  function moveRating(from, delta) {
+    const next = Math.min(MAX_RATING, Math.max(MIN_RATING, from + delta));
+    setRating(next - 1);
+    ratingInputs[next - 1].focus();
+  }
+  function onRatingKeydown(event) {
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') { event.preventDefault(); moveRating(Number(event.target.value), 1); }
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') { event.preventDefault(); moveRating(Number(event.target.value), -1); }
+  }
+  ratingInputs.forEach((input) => {
+    input.addEventListener('change', () => setRating(Number(input.value) - 1));
+    input.addEventListener('keydown', onRatingKeydown);
+  });
+  setRating(DEFAULT_IDX);
 
   const form = el('form', { class: 'bake-form', 'aria-label': 'Log a bake' },
     el('label', { class: 'field', for: 'bake-name' }, 'Bread name', nameInput),
@@ -49,21 +74,24 @@ export function renderBakeForm({ onAdd }) {
     el('button', { type: 'submit', class: 'btn-primary' }, 'Log this bake'),
   );
 
-  form.addEventListener('submit', (event) => {
+  function resetForm() {
+    form.reset();
+    setRating(DEFAULT_IDX);
+    dateInput.value = today();
+    nameInput.focus();
+  }
+  function onSubmit(event) {
     event.preventDefault();
-    const rating = Number(ratingInputs.find((r) => r.checked)?.value ?? 3);
     onAdd({
       name: nameInput.value,
       date: dateInput.value,
-      rating,
+      rating: Number(ratingInputs.find((r) => r.checked)?.value ?? (DEFAULT_IDX + 1)),
       note: noteInput.value,
       bakeAgain: bakeAgain.checked,
     });
-    form.reset();
-    ratingInputs[2].checked = true;
-    dateInput.value = today();
-    nameInput.focus();
-  });
+    resetForm();
+  }
+  form.addEventListener('submit', onSubmit);
 
   return form;
 }

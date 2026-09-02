@@ -1,7 +1,10 @@
 import { el } from './dom.js';
 import { averageRating } from '../utils/rating.js';
 
-/** Compact stats line: total bakes + average rating. */
+/**
+ * Compact live stats line: total bakes + average rating.
+ * @param {import('../store/bakeStore.js').BakeEntry[]} bakes
+ */
 export function renderSummaryBar(bakes) {
   const total = bakes.length;
   const avg = averageRating(bakes);

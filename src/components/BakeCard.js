@@ -7,12 +7,38 @@ function formatDate(iso) {
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-/** Render one bake card with its delete control. */
+/**
+ * Render one bake card. Deleting uses an inline in-context confirmation
+ * (not a blocking browser dialog), so the user never loses their place.
+ * @param {import('../store/bakeStore.js').BakeEntry} bake
+ * @param {{onDelete: (id: string) => void}} opts
+ */
 export function renderBakeCard(bake, { onDelete }) {
-  const confirmDelete = () =>
-    globalThis.confirm ? globalThis.confirm('Toss this bake from the journal?') : true;
+  const actions = el('div', { class: 'card-actions' });
+  let confirming = false;
 
-  return el('article', {
+  function renderActions() {
+    actions.replaceChildren(
+      confirming
+        ? el('div', { class: 'confirm-row' },
+            el('span', { class: 'confirm-q' }, 'Remove this bake?'),
+            el('button', { type: 'button', class: 'btn-danger btn-sm', onClick: confirmDelete }, 'Yes, remove'),
+            el('button', { type: 'button', class: 'btn-ghost btn-sm', onClick: cancelConfirm }, 'Keep'),
+          )
+        : el('button', {
+            type: 'button', class: 'btn-danger', 'aria-label': 'Delete ' + bake.name,
+            onClick: askConfirm,
+          }, 'Delete'),
+    );
+  }
+  function askConfirm() { confirming = true; renderActions(); }
+  function cancelConfirm() { confirming = false; renderActions(); }
+  function confirmDelete() { onDelete(bake.id); }
+
+  const badge = el('span', { class: 'badge' + (bake.bakeAgain ? ' yes' : ' no') },
+    bake.bakeAgain ? 'Would bake again' : 'One-and-done');
+
+  const card = el('article', {
     class: 'bake-card' + (bake.bakeAgain ? ' will-repeat' : ''),
     'data-id': bake.id,
   },
@@ -21,10 +47,8 @@ export function renderBakeCard(bake, { onDelete }) {
       el('time', { class: 'card-date', datetime: bake.date }, formatDate(bake.date))),
     el('div', { class: 'card-rating', 'aria-label': 'Rated ' + bake.rating + ' out of 5' }, '\u{1F35E}'.repeat(bake.rating)),
     bake.note ? el('p', { class: 'card-note' }, bake.note) : null,
-    el('footer', { class: 'card-foot' },
-      el('span', { class: 'badge' + (bake.bakeAgain ? ' yes' : ' no') }, bake.bakeAgain ? 'Would bake again' : 'One-and-done'),
-      el('button', {
-        type: 'button', class: 'btn-danger', 'aria-label': 'Delete ' + bake.name,
-        onClick: () => { if (confirmDelete()) onDelete(bake.id); },
-      }, 'Delete')));
+    el('footer', { class: 'card-foot' }, badge, actions));
+
+  renderActions();
+  return card;
 }
